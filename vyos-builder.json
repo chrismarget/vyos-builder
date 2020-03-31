@@ -1,0 +1,140 @@
+{
+  "variables": {
+    "home_dir": "{{ env `HOME` }}",
+    "build_dir": "build",
+    "web_dir": "webroot",
+    "build_container": "true",
+    "container_tag": "crux",
+    "preseed": "preseed.cfg",
+    "time": "{{ isotime \"1136239445\"}}",
+    "vm_name": "vyos-builder",
+    "version": "0.0.1",
+    "vyos_arch": "amd64",
+    "vyos_version": "1.2.0",
+    "vyos_build_by": "{{ env `USER` }}",
+    "vyos_src": "https://github.com/vyos/vyos-build",
+    "vyos_user": "vyos",
+    "custom_pkgs": "cloud-init tcpdump"
+  },
+  "builders": [
+    {
+      "type": "virtualbox-iso",
+      "vm_name": "{{ user `vm_name` }}_{{ user `version` }}-{{ user `time` }}",
+      "output_directory": "{{ user `build_dir` }}-{{ user `time` }}",
+      "disk_size": "100000",
+      "guest_additions_mode": "disable",
+      "guest_os_type": "Ubuntu_64",
+      "hard_drive_interface": "sata",
+      "headless": "false",
+      "iso_urls": [
+        "http://cdimage.ubuntu.com/ubuntu/releases/bionic/release/ubuntu-18.04.4-server-amd64.iso"
+      ],
+      "iso_checksum": "e2ecdace33c939527cbc9e8d23576381c493b071107207d2040af72595f8990b",
+      "http_directory": "{{ user `web_dir` }}",
+      "boot_wait": "5s",
+      "boot_command": [
+        "<esc><esc><enter>",
+        "/install/vmlinuz",
+        " initrd=/install/initrd.gz",
+        " auto",
+        " debconf/priority=critical",
+        " locale=en_US",
+        " netcfg/get_hostname={{ user `vm_name` }}-{{ user `time` }}",
+        " preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg",
+        " PACKER_SSH_PUBLIC_KEY=\"{{ .SSHPublicKey }}\"",
+        "<enter>"
+      ],
+      "ssh_username": "root",
+      "ssh_wait_timeout": "10000s",
+      "shutdown_command": "shutdown -P now",
+      "vboxmanage": [
+        [ "modifyvm", "{{.Name}}", "--memory", "2048" ],
+        [ "modifyvm", "{{.Name}}", "--cpus", "2" ],
+        [ "modifyvm", "{{.Name}}", "--paravirtprovider", "default" ],
+        [ "modifyvm", "{{.Name}}", "--nictype1", "virtio" ],
+        [ "storageattach", "{{.Name}}", "--storagectl", "SATA Controller", "--port", "1", "--device", "0", "--type", "dvddrive", "--medium", "emptydrive" ]
+      ]
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "file",
+      "source": "{{ user `home_dir` }}/.ssh/id_rsa.pub",
+      "destination": "/tmp/authorized_keys"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "cat /tmp/authorized_keys >> /root/.ssh/authorized_keys"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "mkdir /tmp/ramdisk",
+        "mount -t tmpfs -o size=1m tmpfs /tmp/ramdisk",
+        "ssh-keygen -t rsa -f /tmp/ramdisk/id_rsa -P ''",
+        "cat /tmp/ramdisk/id_rsa.pub >> /root/.ssh/authorized_keys"
+      ]
+    },
+    {
+      "type": "file",
+      "direction": "download",
+      "source": "/tmp/ramdisk/id_rsa",
+      "destination": "{{ user `build_dir` }}-{{ user `time` }}/{{ user `vm_name` }}_{{ user `version` }}-{{ user `time` }}.sshkey"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "umount /tmp/ramdisk"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "curl http://$PACKER_HTTP_ADDR/docker.gpg | apt-key add -",
+        "add-apt-repository \"deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\"",
+        "apt-get update -y",
+        "apt-get install -y docker-ce"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "useradd -ms /bin/bash -G docker {{ user `vyos_user` }}",
+        "tar -C $HOME -cf - .ssh/authorized_keys | su -c 'tar -C $HOME -xvf -' {{ user `vyos_user` }}"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "su -c 'echo \"BUILD_CONTAINER={{ user `build_container` }}\"         >> $HOME/build_vyos.env' {{ user `vyos_user` }}",
+        "su -c 'echo \"CONTAINER_TAG={{ user `container_tag` }}\"             >> $HOME/build_vyos.env' {{ user `vyos_user` }}",
+        "su -c 'echo \"ARCH={{ user `vyos_arch` }}\"                          >> $HOME/build_vyos.env' {{ user `vyos_user` }}",
+        "su -c 'echo \"BUILD_BY={{ user `vyos_build_by` }}\"                  >> $HOME/build_vyos.env' {{ user `vyos_user` }}",
+        "su -c 'echo \"VYOS_SRC={{ user `vyos_src` }}\"                       >> $HOME/build_vyos.env' {{ user `vyos_user` }}",
+        "su -c 'echo \"VYOS_VER={{ user `vyos_version` }}\"                   >> $HOME/build_vyos.env' {{ user `vyos_user` }}",
+        "su -c 'echo -e \"CUSTOM_PKGS=\\x22{{ user `custom_pkgs` }}\\x22\"    >> $HOME/build_vyos.env' {{ user `vyos_user` }}",
+        "su -c 'curl -o $HOME/build_vyos.sh http://$PACKER_HTTP_ADDR/build_vyos.sh' {{ user `vyos_user` }}",
+        "su -c 'chmod 755 $HOME/build_vyos.sh' {{ user `vyos_user` }}",
+        "su -c '${HOME}/build_vyos.sh' {{ user `vyos_user` }}"
+      ]
+    },
+    {
+      "type": "file",
+      "direction": "download",
+      "source": "/home/{{ user `vyos_user` }}/vyos-build/build/vyos-{{ user `vyos_version` }}-{{ user `vyos_arch` }}.iso",
+      "destination": "/tmp/vyos-{{ user `vyos_version` }}-{{ user `vyos_arch` }}.iso"
+    },
+    {
+      "type": "file",
+      "direction": "download",
+      "source": "/home/{{ user `vyos_user` }}/vyos-build/build/vyos-{{ user `vyos_version` }}-{{ user `vyos_arch` }}.iso",
+      "destination": "{{ user `build_dir` }}-{{ user `time` }}/vyos-{{ user `vyos_version` }}-{{ user `vyos_arch` }}.iso"
+    },
+    {
+      "type": "shell-local",
+      "command": "ln -sf {{ user `build_dir` }}-{{ user `time` }} build-latest"
+    }
+  ]
+}
