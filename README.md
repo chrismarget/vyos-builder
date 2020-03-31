@@ -1,7 +1,7 @@
 # vyos-builder
 A Packer project to build a VyOS .iso.
 
-When you run this builder, it builds an Ubuntu 18.04 VM, and then uses that VM to build a VyOS `.iso` file. The VyOS image is then extracted from the VM, the VM is shut down, and then exported as a `.vmdk` and `.ovf`
+When you run this builder, it builds an Ubuntu 18.04 VM which is used to build a VyOS `.iso` file. The VyOS image is then extracted from the VM which gets shut down and then exported as a `.vmdk` and `.ovf`.
 
 ## Run it
 ```
