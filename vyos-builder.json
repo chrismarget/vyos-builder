@@ -113,9 +113,9 @@
       "type": "shell",
       "inline": [
         "useradd -ms /bin/bash -G docker {{ user `vyos_user` }}",
-        "tar -C $HOME -cf - .ssh/authorized_keys | su -c 'tar -C $HOME -xvf -' {{ user `vyos_user` }}",
+        "tar -C $HOME -cf - .ssh/authorized_keys | su -c 'tar -C $HOME -xvf -' {{ user `vyos_user` }}"
       ]
-    }
+    },
     {
       "type": "shell",
       "inline": [
