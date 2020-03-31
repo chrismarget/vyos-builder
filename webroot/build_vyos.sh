@@ -1,5 +1,4 @@
 #!/bin/sh -e
-
 ENV=$HOME/build_vyos.env
 
 if [ -r "$ENV" ]
@@ -16,12 +15,14 @@ then
   git clone -b current --single-branch $VYOS_SRC $SRC_DIR
 fi
 
+# Fetch or build the vyos-build container
 CONTAINER="vyos/vyos-build"
-TAG=${CONTAINER_TAG:-current}
 if [ \"x$BUILD_CONTAINER\" = \"xtrue\" ]
 then
+  TAG=latest
   (cd $SRC_DIR; docker build -t $CONTAINER docker)
 else
+  TAG=${CONTAINER_TAG:-current}
   docker pull $CONTAINER:$TAG
 fi
 
