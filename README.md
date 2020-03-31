@@ -14,11 +14,12 @@ The project fetches the Ubuntu server installer iso, installs Ubuntu, installs D
 
 When the build completes, you'll find a timestamped build directory with the following contents:
 ```
-├── build-33563159545451
-│   ├── vyos-1.2.0-amd64.iso
-│   ├── vyos-builder_0.0.1-33563159545451-disk001.vmdk
-│   ├── vyos-builder_0.0.1-33563159545451.ovf
-│   └── vyos-builder_0.0.1-33563159545451.sshkey
+vyos-builder
+└── build-33563159545451
+    ├── vyos-1.2.0-amd64.iso
+    ├── vyos-builder_0.0.1-33563159545451-disk001.vmdk
+    ├── vyos-builder_0.0.1-33563159545451.ovf
+    └── vyos-builder_0.0.1-33563159545451.sshkey
 ```
 
 Those files are:
@@ -50,7 +51,7 @@ The variables related to the actual VyOS build wind up in `/home/vyos/build-vyos
 ## Rebuilds
 When building a second VyOS image you can, of course start from scratch. Probably faster would be a pattern like the following:
 * Import the VM into Virtualbox or other hypervisor
-* While waiting, `chmod 600 buil-xxx/xxxxx.sshkey` (the file provisioner used for fetching the key doesn't supoprt permissions and I wanted to avoid platform-specific incantations)
+* While waiting, `chmod 600 build-xxx/xxxxx.sshkey` (the file provisioner used for fetching the key doesn't supoprt permissions and I wanted to avoid platform-specific incantations)
 * Use the ssh key to access the new VM: `ssh -i build-xxx/xxxxx.sshkey vyos@<ip-address>`
 * Review/modify the contents of `build-vyos.env` and then run `./build-vyos.sh`
-* The VyOS image file should appear in `/home/vyos/vyos-build/build`
+* After about 18 minutes (2012 MacBook), a VyOS image file appears in `/home/vyos/vyos-build/build`
