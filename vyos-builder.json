@@ -65,12 +65,29 @@
     {
       "type": "shell",
       "inline": [
+        "# This provisioner, with the one above, copies the user's public key into the resulting VM.",
+        "# It's not strictly required, but handy to have because it streamlines access to the VM for",
+        "# debugging purposes. This is one of 3 SSH keys that gets used within the VM. In all we have:",
+        "# - The ephemeral key used by packer. You can see it get typed in on the kernel command line",
+        "#   as the build VM boots for the first time. The preseed file installs it, and packer removes",
+        "#   it at the end of the build",
+        "# - This key, pulled from the user's home directory (your home directory)",
+        "# - A key created *on* the VM (in a ramdisk so it's never written to block storage) and trusted",
+        "#   by the VM. This key is exported by a file provisioner below, and stored alongside the .ovf",
+        "#   and .vmdk files. Use it if you need to access the VM again in the future after packer exits.",
+        "#",
+        "# This provisioner and the one above are purely for convenience, can be removed without affecting",
+        "# they vyos build.",
         "cat /tmp/authorized_keys >> /root/.ssh/authorized_keys"
       ]
     },
     {
       "type": "shell",
       "inline": [
+        "# This provisioner creates an ssh key (in a ramdisk) and causes the root user to trust that key.",
+        "# The key will be exported to the build directory by the next provisioner below. It is not",
+        "# required, but rather exists to facilitate access to the VM should you find a need to boot it",
+        "# up after the initial vyos creation. These two provisioners can be safely removed.",
         "mkdir /tmp/ramdisk",
         "mount -t tmpfs -o size=1m tmpfs /tmp/ramdisk",
         "ssh-keygen -t rsa -f /tmp/ramdisk/id_rsa -P ''",
@@ -86,12 +103,6 @@
     {
       "type": "shell",
       "inline": [
-        "umount /tmp/ramdisk"
-      ]
-    },
-    {
-      "type": "shell",
-      "inline": [
         "curl http://$PACKER_HTTP_ADDR/docker.gpg | apt-key add -",
         "add-apt-repository \"deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\"",
         "apt-get update -y",
@@ -102,12 +113,19 @@
       "type": "shell",
       "inline": [
         "useradd -ms /bin/bash -G docker {{ user `vyos_user` }}",
-        "tar -C $HOME -cf - .ssh/authorized_keys | su -c 'tar -C $HOME -xvf -' {{ user `vyos_user` }}"
+        "tar -C $HOME -cf - .ssh/authorized_keys | su -c 'tar -C $HOME -xvf -' {{ user `vyos_user` }}",
       ]
     },
     {
       "type": "shell",
       "inline": [
+        "# This provisioner populates the build_vyos.env file, and then calls the build_vyos.sh script.",
+        "#",
+        "# The env file exists to telegraph variables from the packer configuration into the build",
+        "# environment in a way that facilitates re-use (re-run build_vyos.sh) without running packer",
+        "# again.",
+        "#",
+        "# The quote escaping for custom_pkgs is gnarly. 0x22 is a double-quote character.",
         "su -c 'echo \"BUILD_CONTAINER={{ user `build_container` }}\"         >> $HOME/build_vyos.env' {{ user `vyos_user` }}",
         "su -c 'echo \"CONTAINER_TAG={{ user `container_tag` }}\"             >> $HOME/build_vyos.env' {{ user `vyos_user` }}",
         "su -c 'echo \"ARCH={{ user `vyos_arch` }}\"                          >> $HOME/build_vyos.env' {{ user `vyos_user` }}",
@@ -124,17 +142,7 @@
       "type": "file",
       "direction": "download",
       "source": "/home/{{ user `vyos_user` }}/vyos-build/build/vyos-{{ user `vyos_version` }}-{{ user `vyos_arch` }}.iso",
-      "destination": "/tmp/vyos-{{ user `vyos_version` }}-{{ user `vyos_arch` }}.iso"
-    },
-    {
-      "type": "file",
-      "direction": "download",
-      "source": "/home/{{ user `vyos_user` }}/vyos-build/build/vyos-{{ user `vyos_version` }}-{{ user `vyos_arch` }}.iso",
       "destination": "{{ user `build_dir` }}-{{ user `time` }}/vyos-{{ user `vyos_version` }}-{{ user `vyos_arch` }}.iso"
-    },
-    {
-      "type": "shell-local",
-      "command": "ln -sf {{ user `build_dir` }}-{{ user `time` }} build-latest"
     }
   ]
 }
