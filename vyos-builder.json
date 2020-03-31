@@ -3,7 +3,7 @@
     "home_dir": "{{ env `HOME` }}",
     "build_dir": "build",
     "web_dir": "webroot",
-    "build_container": "true",
+    "build_container": "false",
     "container_tag": "crux",
     "preseed": "preseed.cfg",
     "time": "{{ isotime \"1136239445\"}}",
@@ -115,7 +115,7 @@
         "useradd -ms /bin/bash -G docker {{ user `vyos_user` }}",
         "tar -C $HOME -cf - .ssh/authorized_keys | su -c 'tar -C $HOME -xvf -' {{ user `vyos_user` }}",
       ]
-    },
+    }
     {
       "type": "shell",
       "inline": [
