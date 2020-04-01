@@ -10,7 +10,7 @@
     "vm_name": "vyos-builder",
     "version": "0.0.1",
     "vyos_arch": "amd64",
-    "vyos_version": "1.2.0",
+    "vyos_version": "1.2.4",
     "vyos_build_by": "{{ env `USER` }}",
     "vyos_src": "https://github.com/vyos/vyos-build",
     "vyos_user": "vyos",
