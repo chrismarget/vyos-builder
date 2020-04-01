@@ -38,11 +38,12 @@ The idea with this thing is that all configuration options are set in the `build
 
 ```
   "variables": {
-    "build_container": "false",           <- Controls whether you'll build (or fetch) the vyos/vyos-build docker container
-    "container_tag": "crux",              <- Relevant if fetching the container. Must match the VyOS version. 'crux' for 1.2.x
+    "vyos_build_target": "vmware",        <- Set the build target vmware/iso/azure/AWS/GCE etc... See Makefile: https://github.com/vyos/vyos-build/blob/current/Makefile
+    "vyos_version": "1.2.4",              <- Probably obviuos
+    "container_tag": "crux",              <- Relevant if fetching the container. Must match the VyOS version. Naming scheme: https://blog.vyos.io/vyos-development-news-in-august-and-september
+    "build_container": "false",           <- Controls whether you'll build (vs. fetch) the vyos/vyos-build docker container
     "vyos_arch": "amd64",                 <- Probably obvious
-    "vyos_version": "1.2.0",              <- Probably obviuos
-    "custom_pkgs": "cloud-init tcpdump"   <- List of custom packages to be included in the VyOS build
+    "custom_pkgs": "tcpdump bc"           <- Space delimited list of custom packages to be included in the VyOS build
   }
 ````
 
