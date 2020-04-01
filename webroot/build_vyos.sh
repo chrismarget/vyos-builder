@@ -27,4 +27,4 @@ else
 fi
 
 docker run --rm --privileged -v $SRC_DIR:/vyos -w /vyos $CONTAINER:$TAG ./configure --custom-package "$CUSTOM_PKGS" --architecture $ARCH --build-by $BUILD_BY --build-type release --version $VYOS_VER
-docker run --rm --privileged -v $SRC_DIR:/vyos -w /vyos $CONTAINER:$TAG sudo make iso
+docker run --rm --privileged -v $SRC_DIR:/vyos -w /vyos $CONTAINER:$TAG sudo make $VYOS_TARGET

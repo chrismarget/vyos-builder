@@ -11,10 +11,11 @@
     "version": "0.0.1",
     "vyos_arch": "amd64",
     "vyos_version": "1.2.4",
+    "vyos_build_target": "vmware",
     "vyos_build_by": "{{ env `USER` }}",
     "vyos_src": "https://github.com/vyos/vyos-build",
     "vyos_user": "vyos",
-    "custom_pkgs": "cloud-init tcpdump"
+    "custom_pkgs": "tcpdump"
   },
   "builders": [
     {
@@ -132,6 +133,7 @@
         "su -c 'echo \"BUILD_BY={{ user `vyos_build_by` }}\"                  >> $HOME/build_vyos.env' {{ user `vyos_user` }}",
         "su -c 'echo \"VYOS_SRC={{ user `vyos_src` }}\"                       >> $HOME/build_vyos.env' {{ user `vyos_user` }}",
         "su -c 'echo \"VYOS_VER={{ user `vyos_version` }}\"                   >> $HOME/build_vyos.env' {{ user `vyos_user` }}",
+        "su -c 'echo \"VYOS_TARGET={{ user `vyos_build_target` }}\"           >> $HOME/build_vyos.env' {{ user `vyos_user` }}",
         "su -c 'echo -e \"CUSTOM_PKGS=\\x22{{ user `custom_pkgs` }}\\x22\"    >> $HOME/build_vyos.env' {{ user `vyos_user` }}",
         "su -c 'curl -o $HOME/build_vyos.sh http://$PACKER_HTTP_ADDR/build_vyos.sh' {{ user `vyos_user` }}",
         "su -c 'chmod 755 $HOME/build_vyos.sh' {{ user `vyos_user` }}",
