@@ -15,7 +15,8 @@
     "vyos_build_by": "{{ env `USER` }}",
     "vyos_src": "https://github.com/vyos/vyos-build",
     "vyos_user": "vyos",
-    "custom_pkgs": "tcpdump"
+    "custom_pkgs": "tcpdump",
+    "ovftool": "VMware-ovftool-4.3.0-7948156-lin.x86_64.bundle"
   },
   "builders": [
     {
@@ -43,6 +44,8 @@
         " netcfg/get_hostname={{ user `vm_name` }}-{{ user `time` }}",
         " preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg",
         " PACKER_SSH_PUBLIC_KEY=\"{{ .SSHPublicKey }}\"",
+        " OVFTOOL={{ user `ovftool` }}",
+        " TARGET={{user `vyos_build_target` }}",
         "<enter>"
       ],
       "ssh_username": "root",
@@ -134,6 +137,7 @@
         "su -c 'echo \"VYOS_SRC={{ user `vyos_src` }}\"                       >> $HOME/build_vyos.env' {{ user `vyos_user` }}",
         "su -c 'echo \"VYOS_VER={{ user `vyos_version` }}\"                   >> $HOME/build_vyos.env' {{ user `vyos_user` }}",
         "su -c 'echo \"VYOS_TARGET={{ user `vyos_build_target` }}\"           >> $HOME/build_vyos.env' {{ user `vyos_user` }}",
+        "su -c 'echo \"BUILD_DIR={{ user `build_dir` }}\"                     >> $HOME/build_vyos.env' {{ user `vyos_user` }}",
         "su -c 'echo -e \"CUSTOM_PKGS=\\x22{{ user `custom_pkgs` }}\\x22\"    >> $HOME/build_vyos.env' {{ user `vyos_user` }}",
         "su -c 'curl -o $HOME/build_vyos.sh http://$PACKER_HTTP_ADDR/build_vyos.sh' {{ user `vyos_user` }}",
         "su -c 'chmod 755 $HOME/build_vyos.sh' {{ user `vyos_user` }}",
@@ -143,7 +147,7 @@
     {
       "type": "file",
       "direction": "download",
-      "source": "/home/{{ user `vyos_user` }}/vyos-build/build/vyos-{{ user `vyos_version` }}-{{ user `vyos_arch` }}.iso",
+      "source": "/home/{{ user `build_dir` }}/",
       "destination": "{{ user `build_dir` }}-{{ user `time` }}/vyos-{{ user `vyos_version` }}-{{ user `vyos_arch` }}.iso"
     }
   ]

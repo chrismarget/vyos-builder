@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh
 ENV=$HOME/build_vyos.env
 
 if [ -r "$ENV" ]
@@ -17,7 +17,7 @@ fi
 
 # Fetch or build the vyos-build container
 CONTAINER="vyos/vyos-build"
-if [ \"x$BUILD_CONTAINER\" = \"xtrue\" ]
+if [ "$BUILD_CONTAINER" = "true" ]
 then
   TAG=latest
   (cd $SRC_DIR; docker build -t $CONTAINER docker)
@@ -26,5 +26,38 @@ else
   docker pull $CONTAINER:$TAG
 fi
 
-docker run --rm --privileged -v $SRC_DIR:/vyos -w /vyos $CONTAINER:$TAG ./configure --custom-package "$CUSTOM_PKGS" --architecture $ARCH --build-by $BUILD_BY --build-type release --version $VYOS_VER
-docker run --rm --privileged -v $SRC_DIR:/vyos -w /vyos $CONTAINER:$TAG sudo make $VYOS_TARGET
+OVERLAY="-v $SRC_DIR:/vyos"
+CMD="./configure --custom-package "$CUSTOM_PKGS" --architecture $ARCH --build-by $BUILD_BY --build-type release --version $VYOS_VER"
+docker run --rm --privileged $OVERLAY -w /vyos $CONTAINER:$TAG sh -c "$CMD"
+
+if [ "$TARGET" = "vmware" ]
+then
+  CMD="sudo ln -s /bin/true /bin/ovftool; $CMD"
+fi
+
+CMD="sudo make $VYOS_TARGET"
+case ${VYOS_TARGET} in
+  "vmware")
+    CMD="sudo ln -s /bin/true /bin/ovftool; $CMD"
+    ;;
+  "iso")
+    ;;
+esac
+
+docker run --rm --privileged $OVERLAY -w /vyos $CONTAINER:$TAG sh -c "$CMD"
+
+mkdir -p $BUILD_DIR
+
+case ${VYOS_TARGET} in
+  "vmware")
+    FILES="vyos_vmware_image.ovf vyos_vmware_image.vmdk vyos_vmware_image.mf"
+    echo "If there's an error about private keys directly above this, then the build didn't necessarily fail."
+    echo "The build should have produced the following files: $FILES"
+    echo "Try to grab them..."
+    (cd ${SRC_DIR}/build/; ls -l $FILES)
+    tar cvf ${BUILD_DIR}/vyos_vmware_image.ova -C ${SRC_DIR}/build $FILES
+    ;;
+  "iso")
+    ln -s ${SRC_DIR}/build/vyos-${VYOS_VER}-${BUILD_BY}.iso $BUILD_DIR
+    ;;
+esac
