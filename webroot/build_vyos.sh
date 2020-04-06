@@ -46,6 +46,7 @@ esac
 
 docker run --rm --privileged $OVERLAY -w /vyos $CONTAINER:$TAG sh -c "$CMD"
 
+BUILD_DIR=${HOME}/$BUILD_DIR
 mkdir -p $BUILD_DIR
 
 case ${VYOS_TARGET} in
@@ -58,6 +59,6 @@ case ${VYOS_TARGET} in
     tar cvf ${BUILD_DIR}/vyos_vmware_image.ova -C ${SRC_DIR}/build $FILES
     ;;
   "iso")
-    ln -s ${SRC_DIR}/build/vyos-${VYOS_VER}-${BUILD_BY}.iso $BUILD_DIR
+    mv ${SRC_DIR}/build/vyos-${VYOS_VER}.iso $BUILD_DIR
     ;;
 esac
