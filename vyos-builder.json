@@ -15,8 +15,7 @@
     "vyos_build_by": "{{ env `USER` }}",
     "vyos_src": "https://github.com/vyos/vyos-build",
     "vyos_user": "vyos",
-    "custom_pkgs": "tcpdump",
-    "ovftool": "VMware-ovftool-4.3.0-7948156-lin.x86_64.bundle"
+    "custom_pkgs": "tcpdump"
   },
   "builders": [
     {
@@ -44,8 +43,6 @@
         " netcfg/get_hostname={{ user `vm_name` }}-{{ user `time` }}",
         " preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg",
         " PACKER_SSH_PUBLIC_KEY=\"{{ .SSHPublicKey }}\"",
-        " OVFTOOL={{ user `ovftool` }}",
-        " TARGET={{user `vyos_build_target` }}",
         "<enter>"
       ],
       "ssh_username": "root",
@@ -147,7 +144,7 @@
     {
       "type": "file",
       "direction": "download",
-      "source": "/home/{{ user `build_dir` }}/",
+      "source": "/home/{{ user `vyos_user` }}/{{ user `build_dir` }}/",
       "destination": "{{ user `build_dir` }}-{{ user `time` }}/vyos-{{ user `vyos_version` }}-{{ user `vyos_arch` }}.iso"
     }
   ]
