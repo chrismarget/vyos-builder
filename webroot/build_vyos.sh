@@ -30,11 +30,6 @@ OVERLAY="-v $SRC_DIR:/vyos"
 CMD="./configure --custom-package "$CUSTOM_PKGS" --architecture $ARCH --build-by $BUILD_BY --build-type release --version $VYOS_VER"
 docker run --rm --privileged $OVERLAY -w /vyos $CONTAINER:$TAG sh -c "$CMD"
 
-if [ "$TARGET" = "vmware" ]
-then
-  CMD="sudo ln -s /bin/true /bin/ovftool; $CMD"
-fi
-
 CMD="sudo make $VYOS_TARGET"
 case ${VYOS_TARGET} in
   "vmware")
@@ -46,8 +41,18 @@ esac
 
 docker run --rm --privileged $OVERLAY -w /vyos $CONTAINER:$TAG sh -c "$CMD"
 
-BUILD_DIR=${HOME}/$BUILD_DIR
+if [ -z "$TIMESTAMP" ]
+then
+  BUILD_DIR=${HOME}/$BUILD_DIR
+else
+  BUILD_DIR=${HOME}/$BUILD_DIR-$TIMESTAMP
+fi
 mkdir -p $BUILD_DIR
+
+echo "BUILD_DIR=$BUILD_DIR" >> /tmp/var
+echo "VYOS_TARGET=$VYOS_TARGET" >> /tmp/var
+echo "SRC_DIR=$SRC_DIR" >> /tmp/var
+echo "VYOS_VER=$VYOS_VER" >> /tmp/var
 
 case ${VYOS_TARGET} in
   "vmware")
