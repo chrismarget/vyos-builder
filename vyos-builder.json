@@ -6,7 +6,7 @@
     "build_container": "false",
     "container_tag": "crux",
     "preseed": "preseed.cfg",
-    "time": "{{ isotime \"1136239445\"}}",
+    "time": "{{ isotime \"20060102-150405\"}}",
     "vm_name": "vyos-builder",
     "version": "0.0.1",
     "vyos_arch": "amd64",
@@ -119,6 +119,7 @@
     },
     {
       "type": "shell",
+      "environment_vars":["TIMESTAMP={{ user `time` }}"],
       "inline": [
         "# This provisioner populates the build_vyos.env file, and then calls the build_vyos.sh script.",
         "#",
@@ -144,7 +145,7 @@
     {
       "type": "file",
       "direction": "download",
-      "source": "/home/{{ user `vyos_user` }}/{{ user `build_dir` }}/",
+      "source": "/home/{{ user `vyos_user` }}/{{ user `build_dir` }}-{{user `time` }}/",
       "destination": "{{ user `build_dir` }}-{{ user `time` }}/vyos-{{ user `vyos_version` }}-{{ user `vyos_arch` }}.iso"
     }
   ]
