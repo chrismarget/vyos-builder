@@ -64,6 +64,6 @@ case ${VYOS_TARGET} in
     tar cvf ${BUILD_DIR}/vyos_vmware_image.ova -C ${SRC_DIR}/build $FILES
     ;;
   "iso")
-    mv ${SRC_DIR}/build/vyos-${VYOS_VER}-${ARCH}.iso $BUILD_DIR
+    ln -s ${SRC_DIR}/build/vyos-${VYOS_VER}-${ARCH}.iso $BUILD_DIR
     ;;
 esac
