@@ -146,7 +146,7 @@
       "type": "file",
       "direction": "download",
       "source": "/home/{{ user `vyos_user` }}/{{ user `build_dir` }}-{{user `time` }}/",
-      "destination": "{{ user `build_dir` }}-{{ user `time` }}/"
+      "destination": "./"
     }
   ]
 }
